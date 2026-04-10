@@ -11,3 +11,137 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+enum Role {
+  CLIENT
+  DEVELOPER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 1-1
+  profile Profile?
+
+  // 1-N : un développeur peut publier plusieurs services
+  services Service[]
+
+  // 1-N : un client peut faire plusieurs commandes
+  orders Order[]
+
+  @@index([clerkId])
+  @@index([role])
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  bio         String?
+  avatarUrl   String?
+  companyName String?
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  // 1-N
+  services Service[]
+}
+
+model Service {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  description   String
+  price         Float
+  deliveryDays  Int
+  revisions     Int           @default(0)
+  isFeatured    Boolean       @default(false)
+  status        ServiceStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // développeur qui offre le service
+  developerId String
+  developer   User @relation(fields: [developerId], references: [id], onDelete: Restrict)
+
+  // catégorie du service
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // N-N avec Order via OrderItem
+  orderItems OrderItem[]
+
+  @@index([developerId])
+  @@index([categoryId])
+  @@index([price])
+  @@index([status])
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  status           OrderStatus @default(PENDING)
+  total            Float
+  stripePaymentId  String?     @unique
+  promoCode        String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // client qui passe la commande
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // détails de la commande
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  quantity Int    @default(1)
+  price    Float  // prix du service au moment de l'achat
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, serviceId])
+  @@index([orderId])
+  @@index([serviceId])
+}
