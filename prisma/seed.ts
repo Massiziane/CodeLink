@@ -125,6 +125,19 @@ async function main() {
     },
   });
 
+  await prisma.service.create({
+    data: {
+      title: "Audit de code avance avant publication",
+      slug: "advanced-code-audit",
+      description: "Revision technique complete avant mise en production",
+      price: 250,
+      deliveryDays: 2,
+      developerId: dev2.id,
+      categoryId: bugFix.id,
+      status: "DRAFT",
+    },
+  });
+
   //  ORDER (transaction simulée)
   await prisma.order.create({
     data: {

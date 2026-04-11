@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:transactions": "tsx src/lib/test-transactions.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.12",
