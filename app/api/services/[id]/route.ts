@@ -5,7 +5,7 @@ import prisma from "@/app/lib/prisma";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
-// B.1 — GET /actions/services/[id]
+// B.1 — GET /api/services/[id]
 // Retourne un service précis avec ses relations (404 si introuvable)
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
@@ -21,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ data: service });
   } catch (error) {
-    console.error("GET /actions/services/[id] :", error);
+    console.error("GET /api/services/[id] :", error);
     return NextResponse.json(
       { message: "Erreur interne du serveur" },
       { status: 500 }
@@ -29,7 +29,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// B.1 — PUT /actions/services/[id]
+// B.1 — PUT /api/services/[id]
 // Met à jour un service existant après validation Zod partielle
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { status: 400 }
       );
     }
-    console.error("PUT /actions/services/[id] :", error);
+    console.error("PUT /api/services/[id] :", error);
     return NextResponse.json(
       { message: "Erreur interne du serveur" },
       { status: 500 }
@@ -94,7 +94,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// B.1 — DELETE /actions/services/[id]
+// B.1 — DELETE /api/services/[id]
 // Supprime un service après vérification d'existence (404 si absent)
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
@@ -112,7 +112,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ message: "Service supprimé avec succès" });
   } catch (error: unknown) {
-    // P2003 = le service est référencé dans une commande, suppression impossible
     if (
       typeof error === "object" &&
       error !== null &&
@@ -127,7 +126,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
         { status: 400 }
       );
     }
-    console.error("DELETE /actions/services/[id] :", error);
+    console.error("DELETE /api/services/[id] :", error);
     return NextResponse.json(
       { message: "Erreur interne du serveur" },
       { status: 500 }

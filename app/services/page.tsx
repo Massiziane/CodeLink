@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getServices } from "@/lib/queries/services";
 import { Pagination } from "@/components/Pagination";
 
@@ -42,7 +43,15 @@ export default async function ServicesPage({
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Services CodeLink</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-bold text-gray-900">Services CodeLink</h1>
+        <Link
+          href="/services/new"
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+        >
+          + Créer un service
+        </Link>
+      </div>
       <p className="text-gray-500 mb-8">
         {pagination.total} service{pagination.total !== 1 ? "s" : ""} disponible
         {pagination.total !== 1 ? "s" : ""}
@@ -65,9 +74,10 @@ export default async function ServicesPage({
       {services.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
-            <div
+            <Link
               key={service.id}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
+              href={`/services/${service.id}`}
+              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow block"
             >
               {service.isFeatured && (
                 <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded mb-2">
@@ -94,7 +104,7 @@ export default async function ServicesPage({
               <p className="text-xs text-gray-400 mt-2">
                 Par {service.developer.name ?? service.developer.email}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       )}

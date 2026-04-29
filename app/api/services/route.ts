@@ -3,7 +3,7 @@ import { getServices } from "@/lib/queries/services";
 import { createServiceSchema } from "@/schemas/service-api";
 import prisma from "@/app/lib/prisma";
 
-// B.1 — GET /actions/services
+// B.1 — GET /api/services
 // Retourne la liste paginée des services avec filtrage et tri
 export async function GET(request: NextRequest) {
   try {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("GET /actions/services :", error);
+    console.error("GET /api/services :", error);
     return NextResponse.json(
       { message: "Erreur interne du serveur" },
       { status: 500 }
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// B.1 — POST /actions/services
+// B.1 — POST /api/services
 // Crée un nouveau service après validation Zod du body JSON
 export async function POST(request: NextRequest) {
   try {
@@ -85,7 +85,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    // P2002 = contrainte d'unicité violée (slug déjà existant)
     if (
       typeof error === "object" &&
       error !== null &&
@@ -97,7 +96,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    // P2003 = clé étrangère invalide (developerId ou categoryId inexistant)
     if (
       typeof error === "object" &&
       error !== null &&
@@ -109,7 +107,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("POST /actions/services :", error);
+    console.error("POST /api/services :", error);
     return NextResponse.json(
       { message: "Erreur interne du serveur" },
       { status: 500 }
