@@ -91,6 +91,7 @@ model Service {
   status        ServiceStatus @default(DRAFT)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  version       Int           @default(1)
 
   // développeur qui offre le service
   developerId String
