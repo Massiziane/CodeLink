@@ -51,6 +51,9 @@ model User {
   // 1-N : un client peut faire plusieurs commandes
   orders Order[]
 
+  // user back relation
+  cart Cart?
+
   @@index([clerkId])
   @@index([role])
 }
@@ -103,6 +106,8 @@ model Service {
 
   // N-N avec Order via OrderItem
   orderItems OrderItem[]
+
+   cartItems CartItem[] 
 
   @@index([developerId])
   @@index([categoryId])
