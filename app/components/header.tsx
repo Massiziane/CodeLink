@@ -35,14 +35,30 @@ export  function Header() {
           {!isAdminRoute ? (
             <>
               {!isSignedIn ? (
-                <>
-                    <SignInButton />
-                    <SignUpButton />
-                </>
-                ) : (
-                <UserButton />
-                )}
+                <div className="flex items-center gap-2">
+                  
+                  <SignInButton mode="modal">
+                    <button className="px-4 py-2 text-sm rounded-lg border border-zinc-300 hover:bg-zinc-100 transition">
+                      Sign in
+                    </button>
+                  </SignInButton>
 
+                  <SignUpButton mode="modal">
+                    <button className="px-4 py-2 text-sm rounded-lg bg-black text-white hover:bg-zinc-800 transition">
+                      Sign up
+                    </button>
+                  </SignUpButton>
+
+                </div>
+              ) : (
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9",
+                    },
+                  }}
+                />
+              )}
               <Link href="/cart">
                 <ShoppingCart className="size-5" />
               </Link>
