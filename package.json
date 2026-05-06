@@ -10,11 +10,12 @@
     "test:transactions": "tsx src/lib/test-transactions.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.3.0",
+    "@clerk/nextjs": "^7.3.1",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "dotenv": "^17.4.1",
+    "lucide-react": "^1.14.0",
     "next": "16.2.3",
     "prisma": "^7.7.0",
     "react": "19.2.4",
