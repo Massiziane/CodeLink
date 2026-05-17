@@ -4,8 +4,11 @@ import {
   removeCartItem,
   clearCart,
 } from "@/app/actions/cart";
+import { AuthRequiredModal } from "../components/AuthRequireModal";
+
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 
 const TAXES = {
   TPS: 0.05,
@@ -17,16 +20,34 @@ export default async function CartPage() {
 
   if (!userId) {
     return (
+      <AuthRequiredModal
+        redirectUrl="/cart"
+        title="Please sign in"
+        message="You need an account to access your cart and continue shopping."
+        backHref="/services"
+        backLabel="Continue browsing"
+      />
+    );
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: {
+      clerkId: userId,
+    },
+  });
+
+  if (!dbUser) {
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600">Please sign in to view your cart</p>
-        </div>
+        <p className="text-gray-500">User not found in database.</p>
       </div>
     );
   }
 
   const cart = await prisma.cart.findUnique({
-    where: { userId },
+    where: {
+      userId: dbUser.id,
+    },
     include: {
       items: {
         include: {
@@ -49,20 +70,17 @@ export default async function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* HEADER BAR (consistent with app) */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-5 flex justify-between items-center">
-
+      <div className="border-b bg-white">
+        <div className="container mx-auto flex items-center justify-between px-4 py-5">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Shopping Cart</h1>
+
             <p className="text-sm text-gray-500">
               {items.length} item{items.length !== 1 ? "s" : ""}
             </p>
           </div>
 
           <div className="flex gap-3">
-
             <Link
               href="/services"
               className="text-sm text-gray-500 hover:text-black"
@@ -70,33 +88,29 @@ export default async function CartPage() {
               Continue browsing
             </Link>
 
-            <form action={async () => {
-              "use server";
-              await clearCart(userId);
-            }}>
+            <form
+              action={async () => {
+                "use server";
+                await clearCart(dbUser.id);
+              }}
+            >
               <button className="text-sm text-red-500 hover:underline">
                 Clear cart
               </button>
             </form>
-
           </div>
-
         </div>
       </div>
 
-      {/* MAIN */}
-      <div className="container mx-auto px-4 py-10 grid lg:grid-cols-3 gap-8">
-
-        {/* ITEMS */}
-        <div className="lg:col-span-2 space-y-4">
-
+      <div className="container mx-auto grid gap-8 px-4 py-10 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           {items.length === 0 && (
-            <div className="bg-white border rounded-2xl p-10 text-center">
+            <div className="rounded-2xl border bg-white p-10 text-center">
               <p className="text-gray-500">Your cart is empty</p>
 
               <Link
                 href="/services"
-                className="inline-block mt-4 text-orange-600 font-medium"
+                className="mt-4 inline-block font-medium text-orange-600"
               >
                 Browse services →
               </Link>
@@ -106,27 +120,23 @@ export default async function CartPage() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="bg-white border rounded-2xl p-5 flex items-center justify-between hover:shadow-sm transition"
+              className="flex items-center justify-between rounded-2xl border bg-white p-5 transition hover:shadow-sm"
             >
-
-              {/* SERVICE INFO */}
               <div className="flex-1">
-
                 <h3 className="font-semibold text-gray-900">
                   {item.service.title}
                 </h3>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="mt-1 text-sm text-gray-500">
                   ${item.service.price.toFixed(2)} per service
                 </p>
-
               </div>
 
-              {/* QTY CONTROLS */}
               <div className="flex items-center gap-2">
-
-                <form action={updateCartItem.bind(null, item.id, item.quantity - 1)}>
-                  <button className="w-8 h-8 border rounded-lg hover:bg-gray-50">
+                <form
+                  action={updateCartItem.bind(null, item.id, item.quantity - 1)}
+                >
+                  <button className="flex h-8 w-8 items-center justify-center rounded-lg border hover:bg-gray-50">
                     -
                   </button>
                 </form>
@@ -135,45 +145,37 @@ export default async function CartPage() {
                   {item.quantity}
                 </span>
 
-                <form action={updateCartItem.bind(null, item.id, item.quantity + 1)}>
-                  <button className="w-8 h-8 border rounded-lg hover:bg-gray-50">
+                <form
+                  action={updateCartItem.bind(null, item.id, item.quantity + 1)}
+                >
+                  <button className="flex h-8 w-8 items-center justify-center rounded-lg border hover:bg-gray-50">
                     +
                   </button>
                 </form>
-
               </div>
 
-              {/* PRICE + REMOVE */}
-              <div className="text-right ml-6">
-
+              <div className="ml-6 text-right">
                 <p className="font-semibold text-gray-900">
                   ${(item.service.price * item.quantity).toFixed(2)}
                 </p>
 
                 <form action={removeCartItem.bind(null, item.id)}>
-                  <button className="text-xs text-red-500 hover:underline mt-1">
+                  <button className="mt-1 text-xs text-red-500 hover:underline">
                     Remove
                   </button>
                 </form>
-
               </div>
-
             </div>
           ))}
-
         </div>
 
-        {/* SUMMARY SIDEBAR */}
         <div className="lg:col-span-1">
-
-          <div className="bg-white border rounded-2xl p-6 shadow-sm sticky top-24">
-
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
+          <div className="sticky top-24 rounded-2xl border bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold text-gray-900">
               Order Summary
             </h2>
 
             <div className="space-y-3 text-sm text-gray-600">
-
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
@@ -188,29 +190,22 @@ export default async function CartPage() {
                 <span>TVQ</span>
                 <span>${tvq.toFixed(2)}</span>
               </div>
-
             </div>
 
-            <div className="border-t mt-4 pt-4 flex justify-between font-bold text-lg">
+            <div className="mt-4 flex justify-between border-t pt-4 text-lg font-bold">
               <span>Total</span>
-              <span className="text-orange-600">
-                ${total.toFixed(2)}
-              </span>
+              <span className="text-orange-600">${total.toFixed(2)}</span>
             </div>
 
-            {/* STRIPE READY CTA */}
-            <button className="w-full mt-6 bg-orange-600 text-white py-3 rounded-xl font-medium hover:bg-orange-700 transition">
+            <button className="mt-6 w-full rounded-xl bg-orange-600 py-3 font-medium text-white transition hover:bg-orange-700">
               Proceed to Checkout
             </button>
 
-            <p className="text-xs text-gray-400 text-center mt-3">
+            <p className="mt-3 text-center text-xs text-gray-400">
               Secure payment powered by Stripe
             </p>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

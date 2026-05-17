@@ -2,7 +2,7 @@
 
 import { Rocket, Shield, Zap, ArrowRight } from "lucide-react";
 
-import { Header } from "@/app/components/header";
+import { Header } from "@/app/components/UserHeader";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { ServiceCard } from "@/app/components/ServiceCard";
 import { SignUpAlertModal } from "@/app/components/SignUpAlertModal";

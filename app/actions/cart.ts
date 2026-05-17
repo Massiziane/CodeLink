@@ -3,8 +3,11 @@
 import  prisma  from "../lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function addToCart(userId: string, serviceId: string) {
-  // 1. Get service ( validation placeholder)
+export async function addToCart(
+  userId: string,
+  serviceId: string
+) {
+  // 1. Get service
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
   });
@@ -28,20 +31,23 @@ export async function addToCart(userId: string, serviceId: string) {
     });
   }
 
-  // 3. Check if item already exists
-  const existingItem = await prisma.cartItem.findUnique({
-    where: {
-      cartId_serviceId: {
-        cartId: cart.id,
-        serviceId,
+  // 3. Check existing item
+  const existingItem =
+    await prisma.cartItem.findUnique({
+      where: {
+        cartId_serviceId: {
+          cartId: cart.id,
+          serviceId,
+        },
       },
-    },
-  });
+    });
 
-  // 4. If exists then increment
+  // 4. Increment quantity
   if (existingItem) {
     await prisma.cartItem.update({
-      where: { id: existingItem.id },
+      where: {
+        id: existingItem.id,
+      },
       data: {
         quantity: {
           increment: 1,
@@ -49,7 +55,7 @@ export async function addToCart(userId: string, serviceId: string) {
       },
     });
   } else {
-    // 5. Otherwise create new item
+    // 5. Create item
     await prisma.cartItem.create({
       data: {
         cartId: cart.id,
@@ -59,8 +65,10 @@ export async function addToCart(userId: string, serviceId: string) {
     });
   }
 
-  // 6. Refresh UI
+  // REFRESH PAGES
   revalidatePath("/cart");
+  revalidatePath("/services");
+  revalidatePath(`/services/${service.id}`);
 }
 
 export async function updateCartItem(
