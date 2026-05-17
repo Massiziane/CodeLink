@@ -10,39 +10,34 @@ export default function RolePage() {
     null
   );
 
-  async function selectRole(role: "CLIENT" | "DEVELOPER") {
+    async function selectRole(role: "CLIENT" | "DEVELOPER") {
     try {
-      setLoadingRole(role);
+        setLoadingRole(role);
 
-      if (role === "CLIENT") {
-        router.push("/services");
-        return;
-      }
-
-      const response = await fetch("/api/user/role", {
+        const response = await fetch("/api/user/role", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({ role }),
-      });
+        });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.ok) {
+        if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Role update failed:", errorText);
         alert("Could not update role");
         return;
-      }
+        }
 
-      router.push("/developer");
-      router.refresh();
+        router.push(role === "CLIENT" ? "/services" : "/developer");
+        router.refresh();
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong");
+        console.error(error);
+        alert("Something went wrong");
     } finally {
-      setLoadingRole(null);
+        setLoadingRole(null);
     }
-  }
+    }
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
