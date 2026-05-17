@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+
 import { getServices } from "@/lib/queries/services";
 import { Pagination } from "@/components/Pagination";
 import { Header } from "@/app/components/UserHeader";
+import { ServiceAuthCard } from "@/app/components/ServiceAuthCard";
 
 type SearchParams = Promise<{
   page?: string;
@@ -12,7 +15,13 @@ type SearchParams = Promise<{
   sort?: string;
 }>;
 
-export default async function ServicesPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { userId } = await auth();
+
   const params = await searchParams;
 
   const page = parseInt(params.page ?? "1");
@@ -20,15 +29,28 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
   const filters = {
     q: params.q,
     category: params.category,
-    minPrice: params.minPrice ? parseFloat(params.minPrice) : undefined,
-    maxPrice: params.maxPrice ? parseFloat(params.maxPrice) : undefined,
+    minPrice: params.minPrice
+      ? parseFloat(params.minPrice)
+      : undefined,
+    maxPrice: params.maxPrice
+      ? parseFloat(params.maxPrice)
+      : undefined,
     sort: params.sort,
-    page: isNaN(page) || page < 1 ? 1 : page,
+    page:
+      isNaN(page) || page < 1
+        ? 1
+        : page,
   };
 
-  const { data: services, pagination } = await getServices(filters);
+  const {
+    data: services,
+    pagination,
+  } = await getServices(filters);
 
-  const currentSearchParams: Record<string, string | undefined> = {
+  const currentSearchParams: Record<
+    string,
+    string | undefined
+  > = {
     q: params.q,
     category: params.category,
     minPrice: params.minPrice,
@@ -39,35 +61,37 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* GLOBAL HEADER */}
+      {/* HEADER */}
       <Header />
 
       {/* HERO */}
       <section className="bg-gradient-to-br from-orange-500 to-orange-700 text-white py-12">
         <div className="container mx-auto px-4 max-w-6xl">
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-bold">
+              Browse Services
+            </h1>
 
-            {/* LEFT TEXT */}
-            <div>
-              <h1 className="text-4xl font-bold">
-                Browse Services
-              </h1>
+            <p className="text-orange-100 mt-2">
+              Find developers and services
+              for your project
+            </p>
 
-              <p className="text-orange-100 mt-2">
-                Find developers and services for your project
-              </p>
-
-              <p className="text-orange-100 text-sm mt-3">
-                {pagination.total} service{pagination.total !== 1 ? "s" : ""} available
-              </p>
-            </div>
-
-
+            <p className="text-orange-100 text-sm mt-3">
+              {pagination.total} service
+              {pagination.total !== 1
+                ? "s"
+                : ""}{" "}
+              available
+            </p>
           </div>
 
-          {/* SEARCH BAR (NEW — IMPORTANT UX UPGRADE) */}
-          <form method="GET" className="mt-8 max-w-2xl">
+          {/* SEARCH */}
+          <form
+            method="GET"
+            className="mt-8 max-w-2xl"
+          >
             <div className="flex bg-white rounded-xl overflow-hidden shadow-sm">
 
               <input
@@ -94,16 +118,23 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
       <section className="py-10">
         <div className="container mx-auto px-4 max-w-6xl">
 
-          {/* EMPTY STATE */}
+          {/* EMPTY */}
           {services.length === 0 && (
             <div className="text-center py-24">
-              <p className="text-5xl">🔍</p>
+
+              <p className="text-5xl">
+                🔍
+              </p>
+
               <h2 className="text-xl font-semibold mt-4 text-gray-800">
                 No services found
               </h2>
+
               <p className="text-gray-500 mt-2">
-                Try adjusting your filters or search terms.
+                Try adjusting your filters
+                or search terms.
               </p>
+
             </div>
           )}
 
@@ -111,62 +142,81 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
           {services.length > 0 && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-              {services.map((service) => (
-                <Link
-                  key={service.id}
-                  href={`/services/${service.id}`}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl transition block"
-                >
+              {services.map((service) => {
+                const cardContent = (
+                  <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition block">
 
-                  {/* HEADER ROW */}
-                  <div className="flex items-center justify-between mb-3">
+                    {/* TOP */}
+                    <div className="flex items-center justify-between mb-3">
 
-                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">
-                      {service.category.name}
+                      <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">
+                        {service.category.name}
+                      </p>
+
+                      {service.isFeatured && (
+                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                          Featured
+                        </span>
+                      )}
+
+                    </div>
+
+                    {/* TITLE */}
+                    <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                      {service.title}
+                    </h2>
+
+                    {/* DESCRIPTION */}
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-3">
+                      {service.description}
                     </p>
 
-                    {service.isFeatured && (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
-                        Featured
-                      </span>
-                    )}
+                    {/* FOOTER */}
+                    <div className="mt-5 flex items-end justify-between">
 
-                  </div>
+                      <div>
+                        <p className="text-xl font-bold text-orange-600">
+                          ${service.price}
+                        </p>
 
-                  {/* TITLE */}
-                  <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                    {service.title}
-                  </h2>
+                        <p className="text-xs text-gray-400">
+                          {service.deliveryDays} day
+                          {service.deliveryDays > 1
+                            ? "s"
+                            : ""}
+                        </p>
+                      </div>
 
-                  {/* DESCRIPTION */}
-                  <p className="text-sm text-gray-500 mt-2 line-clamp-3">
-                    {service.description}
-                  </p>
+                      <div className="text-right text-xs text-gray-500">
+                        <p>By</p>
 
-                  {/* FOOTER */}
-                  <div className="mt-5 flex items-end justify-between">
+                        <p className="font-medium text-gray-700">
+                          {service.developer.name ??
+                            service.developer.email}
+                        </p>
+                      </div>
 
-                    <div>
-                      <p className="text-xl font-bold text-orange-600">
-                        ${service.price}
-                      </p>
-
-                      <p className="text-xs text-gray-400">
-                        {service.deliveryDays} day{service.deliveryDays > 1 ? "s" : ""}
-                      </p>
-                    </div>
-
-                    <div className="text-right text-xs text-gray-500">
-                      <p>By</p>
-                      <p className="font-medium text-gray-700">
-                        {service.developer.name ?? service.developer.email}
-                      </p>
                     </div>
 
                   </div>
+                );
 
-                </Link>
-              ))}
+                return userId ? (
+                  <Link
+                    key={service.id}
+                    href={`/services/${service.id}`}
+                  >
+                    {cardContent}
+                  </Link>
+                ) : (
+                  <ServiceAuthCard
+                    key={service.id}
+                    serviceId={service.id}
+                  >
+                    {cardContent}
+                  </ServiceAuthCard>
+                );
+              })}
 
             </div>
           )}
@@ -176,18 +226,22 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
             <Pagination
               pagination={pagination}
               basePath="/services"
-              currentSearchParams={currentSearchParams}
+              currentSearchParams={
+                currentSearchParams
+              }
             />
           </div>
 
           {pagination.totalPages > 1 && (
             <p className="text-center text-sm text-gray-400 mt-4">
-              Page {pagination.page} of {pagination.totalPages}
+              Page {pagination.page} of{" "}
+              {pagination.totalPages}
             </p>
           )}
 
         </div>
       </section>
+
     </div>
   );
 }

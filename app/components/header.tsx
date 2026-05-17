@@ -59,9 +59,6 @@ export  function Header() {
                   }}
                 />
               )}
-              <Link href="/cart">
-                <ShoppingCart className="size-5" />
-              </Link>
             </>
           ) : (
             <Link href="/">Retour</Link>

@@ -26,7 +26,7 @@ export function Header() {
         {!isAdminRoute && (
           <div className="hidden md:flex gap-6 text-sm">
             <Link href="/">Accueil</Link>
-            <Link href="/offers">Services</Link>
+            <Link href="/services">Services</Link>
           </div>
         )}
 
