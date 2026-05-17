@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { Code2, Rocket, Shield, Zap, ArrowRight } from "lucide-react";
+import { Rocket, Shield, Zap, ArrowRight } from "lucide-react";
 
 import { Header } from "@/app/components/header";
-import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { ServiceCard } from "@/app/components/ServiceCard";
+import { SignUpAlertModal } from "@/app/components/SignUpAlertModal";
 
 export default function Home() {
   const featuredServices = [
@@ -53,6 +52,9 @@ export default function Home() {
 
   return (
     <>
+      {/* GLOBAL MODAL */}
+      <SignUpAlertModal />
+
       {/* HEADER */}
       <Header />
 
@@ -70,12 +72,14 @@ export default function Home() {
               CodeLink connecte vos idées avec des développeurs experts.
             </p>
 
-            <Link href="/services">
-              <Button className="inline-flex items-center">
-                Explorer les services
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </Link>
+            {/* BUTTON OPENS MODAL */}
+            <button
+              onClick={() => (window as any).openSignupModal?.()}
+              className="inline-flex items-center px-5 py-3 rounded-lg bg-black text-white hover:bg-zinc-800 transition"
+            >
+              Explorer les services
+              <ArrowRight className="ml-2 size-4" />
+            </button>
 
           </div>
         </section>
