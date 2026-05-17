@@ -13,6 +13,51 @@ export type ActionState = {
     errors?: Record<string, string[]>;
 };
 
+// ---- READ 
+// ─── GET ALL PUBLISHED SERVICES ─────────────────────────────────────────
+
+export async function getPublishedServices() {
+  return await prisma.service.findMany({
+    where: {
+      status: "PUBLISHED",
+    },
+    include: {
+      category: true,
+      developer: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+// GET BY ID
+export async function getServiceById(id: string) {
+  return prisma.service.findUnique({
+    where: { id },
+    include: {
+      category: {
+        select: { id: true, name: true, slug: true, description: true },
+      },
+      developer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profile: {
+            select: { avatarUrl: true, bio: true, companyName: true },
+          },
+        },
+      },
+    },
+  });
+}
+
+
 // ─── CREATE ────────────────────────────────────────────────────────────────
 
 export async function createService(prevState: ActionState, formData: FormData): Promise<ActionState> {

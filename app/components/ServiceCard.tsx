@@ -91,7 +91,18 @@ export function ServiceCard({ service }: ServiceCardProps) {
       {/* FOOTER */}
       <CardFooter className="flex justify-end">
         <Link href={`/services/${service.id}`}>
-          <Button>Voir détails</Button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              (window as any).openSignupModal?.();
+            }}
+            className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+          >
+            View details
+          </button>
         </Link>
       </CardFooter>
 
