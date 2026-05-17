@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
+
 import Image from "next/image";
 import logoCodeLink from "@/public/logo_codelink.png";
 import { useUser } from "@clerk/nextjs";
@@ -59,9 +59,7 @@ export  function Header() {
                   }}
                 />
               )}
-              <Link href="/cart">
-                <ShoppingCart className="size-5" />
-              </Link>
+
             </>
           ) : (
             <Link href="/">Retour</Link>

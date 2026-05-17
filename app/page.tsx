@@ -7,15 +7,15 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { ServiceCard, type Service } from "@/app/components/ServiceCard";
 import { getServicesLight } from "@/lib/queries/services";
-import { getAuthUser } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 import { LayoutDashboard } from "lucide-react";
 
 export default async function Home() {
-  const [servicesData, authResult] = await Promise.all([
+  const [servicesData, user] = await Promise.all([
     getServicesLight(),
-    getAuthUser(),
+    getCurrentUser(),
   ]);
-  const isDeveloper = authResult.success && (authResult.user.role === "DEVELOPER" || authResult.user.role === "ADMIN");
+  const isDeveloper = !!user && (user.role === "DEVELOPER" || user.role === "ADMIN");
   const service = servicesData;
   const featured = service.slice(0, 6); // Juste pour l'exemple, on prend les 6 premiers comme "populaires"
   

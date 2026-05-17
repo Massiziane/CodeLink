@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getServices } from "@/lib/queries/services";
 import { Pagination } from "@/components/Pagination";
-import { getAuthUser } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 // B.3 — Page Server Component : liste paginée des services
 // La page courante est lue depuis searchParams (URL partageable)
@@ -20,10 +20,8 @@ export default async function ServicesPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const authResult = await getAuthUser();
-  const canCreateService =
-    authResult.success &&
-    (authResult.user.role === "DEVELOPER" || authResult.user.role === "ADMIN");
+  const user = await getCurrentUser();
+  const canCreateService = !!user && (user.role === "DEVELOPER" || user.role === "ADMIN");
 
   const page = parseInt(params.page ?? "1");
   const filters = {

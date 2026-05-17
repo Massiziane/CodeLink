@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import DeleteServiceButton from "@/app/components/services/DeleteServiceButton";
 
-import { getAuthUser } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -16,13 +16,13 @@ const statusLabels: Record<string, string> = {
 export default async function ServiceDetailPage({ params }: Props) {
   const { id } = await params;
   
-  const [service, authResult] = await Promise.all([
+  const [service, user] = await Promise.all([
     getServiceById(id),
-    getAuthUser(),
+    getCurrentUser(),
   ]);
   if (!service) notFound();
 
-  const canManageService = authResult.success && (authResult.user.role === "ADMIN" || service.developerId === authResult.user.id);
+  const canManageService = !!user && (user.role === "ADMIN" || service.developerId === user.id);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">

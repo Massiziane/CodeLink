@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServices } from "@/lib/queries/services";
 import { createServiceSchema } from "@/schemas/service-api";
 import prisma from "@/app/lib/prisma";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 // B.1 — GET /api/services
 // Retourne la liste paginée des services avec filtrage et tri
@@ -50,6 +51,12 @@ export async function GET(request: NextRequest) {
 // Crée un nouveau service après validation Zod du body JSON
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+    if (user.role !== "DEVELOPER" && user.role !== "ADMIN") {
+      return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
+    }
+
     let body: unknown;
     try {
       body = await request.json();

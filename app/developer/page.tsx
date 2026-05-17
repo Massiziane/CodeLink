@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Plus, Settings, Package, FileText, Archive, ShoppingBag } from "lucide-react";
-import { requireDeveloper } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 import prisma from "@/app/lib/prisma";
 
 export default async function DeveloperDashboardPage() {
-  const user = await requireDeveloper();
+  const user = await getCurrentUser();
+  if (!user) redirect("/onboarding/role");
+  if (user.role !== "DEVELOPER" && user.role !== "ADMIN") redirect("/");
 
   const devFilter = user.role === "ADMIN" ? {} : { developerId: user.id };
 

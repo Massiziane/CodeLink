@@ -1,11 +1,14 @@
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import prisma from "@/app/lib/prisma";
 import ServiceForm from "@/app/components/services/ServiceForm";
-import { requireDeveloper } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 export default async function NewDeveloperServicePage() {
-  await requireDeveloper();
+  const user = await getCurrentUser();
+  if (!user) redirect("/onboarding/role");
+  if (user.role !== "DEVELOPER" && user.role !== "ADMIN") redirect("/");
 
   const categories = await prisma.category.findMany({
     select: { id: true, name: true },

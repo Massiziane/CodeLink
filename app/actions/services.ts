@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "../lib/prisma";
-import { requireDeveloper } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 import { createServiceSchema, updateServiceSchema } from "../schemas/service";
 
 
@@ -16,7 +16,10 @@ export type ActionState = {
 // ─── CREATE ────────────────────────────────────────────────────────────────
 
 export async function createService(prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const user = await requireDeveloper();
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "DEVELOPER" && user.role !== "ADMIN")) {
+        return { success: false, message: "Accès refusé." };
+    }
 
     const raw = {
         title: formData.get("title") ,
@@ -58,7 +61,10 @@ export async function createService(prevState: ActionState, formData: FormData):
 // ─── UPDATE ────────────────────────────────────────────────────────────────
 
 export async function updateService(prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const user = await requireDeveloper();
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "DEVELOPER" && user.role !== "ADMIN")) {
+        return { success: false, message: "Accès refusé." };
+    }
 
     const id = formData.get("id") as string;
     const version = parseInt(formData.get("version") as string, 10);
@@ -119,7 +125,10 @@ export async function deleteService(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
-    const user = await requireDeveloper();
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "DEVELOPER" && user.role !== "ADMIN")) {
+        return { success: false, message: "Accès refusé." };
+    }
 
     const id = formData.get("id") as string;
 

@@ -4,14 +4,16 @@ import Link from "next/link";
 import prisma from "@/app/lib/prisma";
 import ServiceForm from "@/app/components/services/ServiceForm";
 import type { ServiceModel } from "@/app/generated/prisma/models/Service";
-import { requireDeveloper } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditServicePage({ params }: Props) {
   const { id } = await params;
-  const user = await requireDeveloper();
+  const user = await getCurrentUser();
+  if (!user) redirect("/onboarding/role");
+  if (user.role !== "DEVELOPER" && user.role !== "ADMIN") redirect("/");
 
   const [service, categories] = await Promise.all([
     getServiceById(id),

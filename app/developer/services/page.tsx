@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {Plus} from "lucide-react";
 import prisma from "@/app/lib/prisma";
-import { requireDeveloper } from "@/app/lib/auth";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 const statusLabels: Record<string, string> = {
     DRAFT: "Brouillon",
@@ -16,7 +17,9 @@ const statusClasses: Record<string, string> = {
 };
 
 export default async function DeveloperServicesPage() {
-    const user = await requireDeveloper();
+    const user = await getCurrentUser();
+    if (!user) redirect("/onboarding/role");
+    if (user.role !== "DEVELOPER" && user.role !== "ADMIN") redirect("/");
 
     const services = await prisma.service.findMany({
         where: user.role === "ADMIN" ? {} : { developerId: user.id },
