@@ -2,7 +2,9 @@ import { getServiceById } from "@/lib/queries/services";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import DeleteServiceButton from "@/app/components/services/DeleteServiceButton";
-import { Header } from "@/app/components/UserHeader"; // ✅ added header
+import { Header } from "@/app/components/UserHeader";
+import { addToCart } from "@/app/actions/cart";
+import { auth } from "@clerk/nextjs/server";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,17 +17,18 @@ const statusLabels: Record<string, string> = {
 export default async function ServiceDetailPage({ params }: Props) {
   const { id } = await params;
   const service = await getServiceById(id);
+  const { userId } = await auth();
 
   if (!service) notFound();
 
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* GLOBAL HEADER */}
+      {/* HEADER */}
       <Header />
 
       {/* TOP BAR */}
-      <div className="border-b bg-white">
+      <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
 
           <Link
@@ -49,7 +52,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* MAIN LAYOUT */}
+      {/* MAIN */}
       <div className="container mx-auto px-4 py-10 grid lg:grid-cols-3 gap-10">
 
         {/* LEFT */}
@@ -73,7 +76,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             {service.description}
           </p>
 
-          {/* DEVELOPER CARD (upgraded) */}
+          {/* DEVELOPER */}
           <div className="mt-10 bg-white border rounded-xl p-5 shadow-sm">
             <p className="text-sm text-gray-500 mb-1">Developer</p>
             <p className="font-semibold text-gray-900">
@@ -83,11 +86,12 @@ export default async function ServiceDetailPage({ params }: Props) {
 
         </div>
 
-        {/* RIGHT SIDEBAR (PROFESSIONAL CARD) */}
+        {/* RIGHT SIDEBAR */}
         <div className="lg:col-span-1">
 
           <div className="sticky top-24 bg-white border rounded-2xl p-6 shadow-sm">
 
+            {/* PRICE */}
             <p className="text-4xl font-bold text-orange-600">
               ${service.price}
             </p>
@@ -96,6 +100,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               One-time payment
             </p>
 
+            {/* DETAILS */}
             <div className="mt-6 space-y-4 text-sm">
 
               <div className="flex justify-between">
@@ -114,9 +119,31 @@ export default async function ServiceDetailPage({ params }: Props) {
 
             </div>
 
-            <button className="w-full mt-6 bg-orange-600 text-white py-3 rounded-xl font-medium hover:bg-orange-700 transition">
-              Continue
-            </button>
+            {/* ADD TO CART (REAL DB ACTION) */}
+            <form
+              action={async () => {
+                "use server";
+
+                if (!userId) return;
+
+                await addToCart(userId, id);
+              }}
+            >
+              <button className="w-full mt-6 bg-orange-600 text-white py-3 rounded-xl font-medium hover:bg-orange-700 transition">
+                Add to Cart
+              </button>
+            </form>
+
+            {/* OPTIONAL CTA */}
+            <Link href="/cart">
+              <button className="w-full mt-3 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition">
+                Go to Cart
+              </button>
+            </Link>
+
+            <p className="text-xs text-gray-400 text-center mt-3">
+              Secure cart powered by database
+            </p>
 
           </div>
 

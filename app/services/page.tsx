@@ -63,13 +63,6 @@ export default async function ServicesPage({ searchParams }: { searchParams: Sea
               </p>
             </div>
 
-            {/* CTA */}
-            <Link
-              href="/services/new"
-              className="bg-white text-orange-600 px-5 py-2 rounded-lg font-medium hover:bg-orange-50 w-fit"
-            >
-              + Create Service
-            </Link>
 
           </div>
 
