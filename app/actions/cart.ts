@@ -2,18 +2,16 @@
 
 import  prisma  from "../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getAuthUser } from "../lib/auth";
 
-export async function addToCart(userId: string, serviceId: string) {
-  // 1. Get service ( validation placeholder)
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
-  });
+export async function addToCart(serviceId: string) {
+  const authResult = await getAuthUser();
+  if (!authResult.success) throw new Error("Non authentifié");
+  const userId = authResult.user.id;
 
-  if (!service) {
-    throw new Error("Service not found");
-  }
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  if (!service) throw new Error("Service introuvable");
 
-  // 2. Get or create cart
   let cart = await prisma.cart.findUnique({
     where: { userId },
     include: { items: true },
@@ -21,63 +19,39 @@ export async function addToCart(userId: string, serviceId: string) {
 
   if (!cart) {
     cart = await prisma.cart.create({
-      data: {
-        userId,
-      },
+      data: { userId },
       include: { items: true },
     });
   }
 
-  // 3. Check if item already exists
   const existingItem = await prisma.cartItem.findUnique({
-    where: {
-      cartId_serviceId: {
-        cartId: cart.id,
-        serviceId,
-      },
-    },
+    where: { cartId_serviceId: { cartId: cart.id, serviceId } },
   });
 
-  // 4. If exists then increment
   if (existingItem) {
     await prisma.cartItem.update({
       where: { id: existingItem.id },
-      data: {
-        quantity: {
-          increment: 1,
-        },
-      },
+      data: { quantity: { increment: 1 } },
     });
   } else {
-    // 5. Otherwise create new item
     await prisma.cartItem.create({
-      data: {
-        cartId: cart.id,
-        serviceId,
-        quantity: 1,
-      },
+      data: { cartId: cart.id, serviceId, quantity: 1 },
     });
   }
 
-  // 6. Refresh UI
   revalidatePath("/cart");
 }
 
-export async function updateCartItem(
-  cartItemId: string,
-  quantity: number
-) {
-  if (quantity <= 0) {
-    await prisma.cartItem.delete({
-      where: { id: cartItemId },
-    });
-  } else {
+
+export async function updateCartItem(cartItemId: string, quantity: number) {
+  if (quantity <= 0){
+    await prisma.cartItem.delete({ where: { id: cartItemId } });
+  }else{
     await prisma.cartItem.update({
       where: { id: cartItemId },
       data: { quantity },
     });
   }
-
   revalidatePath("/cart");
 }
 
@@ -90,7 +64,12 @@ export async function removeCartItem(cartItemId: string) {
 }
 
 // clear cart
-export async function clearCart(userId: string) {
+export async function clearCart() {
+  const authResult = await getAuthUser();
+  if (!authResult.success) throw new Error("Non authentifié");
+
+  const userId = authResult.user.id;
+  
   const cart = await prisma.cart.findUnique({
     where: { userId },
   });

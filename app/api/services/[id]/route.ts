@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceById } from "@/lib/queries/services";
 import { updateServiceSchema } from "@/schemas/service-api";
 import prisma from "@/app/lib/prisma";
+import { getAuthUser } from "@/app/lib/auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -33,6 +34,15 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 // Met à jour un service existant après validation Zod partielle
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const authResult = await getAuthUser();
+    if (!authResult.success) {
+      return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+    }
+    const { user } = authResult;
+    if (user.role !== "DEVELOPER" && user.role !== "ADMIN") {
+      return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
+    }
+
     const { id } = await params;
 
     const existing = await prisma.service.findUnique({ where: { id } });
@@ -41,6 +51,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { message: "Service introuvable" },
         { status: 404 }
       );
+    }
+
+    if (user.role === "DEVELOPER" && existing.developerId !== user.id) {
+      return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
     }
 
     let body: unknown;
@@ -98,6 +112,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // Supprime un service après vérification d'existence (404 si absent)
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
+    const authResult = await getAuthUser();
+    if (!authResult.success) {
+      return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+    }
+    const { user } = authResult;
+    if (user.role !== "DEVELOPER" && user.role !== "ADMIN") {
+      return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
+    }
+
     const { id } = await params;
 
     const existing = await prisma.service.findUnique({ where: { id } });
@@ -106,6 +129,10 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
         { message: "Service introuvable" },
         { status: 404 }
       );
+    }
+
+    if (user.role === "DEVELOPER" && existing.developerId !== user.id) {
+      return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
     }
 
     await prisma.service.delete({ where: { id } });

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import DeleteServiceButton from "@/app/components/services/DeleteServiceButton";
 
+import { getAuthUser } from "@/app/lib/auth";
+
 type Props = { params: Promise<{ id: string }> };
 
 const statusLabels: Record<string, string> = {
@@ -13,9 +15,14 @@ const statusLabels: Record<string, string> = {
 
 export default async function ServiceDetailPage({ params }: Props) {
   const { id } = await params;
-  const service = await getServiceById(id);
-
+  
+  const [service, authResult] = await Promise.all([
+    getServiceById(id),
+    getAuthUser(),
+  ]);
   if (!service) notFound();
+
+  const canManageService = authResult.success && (authResult.user.role === "ADMIN" || service.developerId === authResult.user.id);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
@@ -23,16 +30,19 @@ export default async function ServiceDetailPage({ params }: Props) {
         <Link href="/services" className="text-sm text-blue-600 hover:underline">
           ← Retour aux services
         </Link>
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/services/${id}/edit`}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Modifier
-          </Link>
-          <DeleteServiceButton id={id} />
-        </div>
+        {canManageService && (
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/developer/services/${id}/edit`}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Modifier
+            </Link>
+            <DeleteServiceButton id={id} />
+          </div>
+        )}
       </div>
+      
 
       <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">
         {service.category.name}

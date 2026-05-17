@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import prisma from "../lib/prisma";
+import { requireDeveloper } from "@/app/lib/auth";
 import { createServiceSchema, updateServiceSchema } from "../schemas/service";
 
 
@@ -16,25 +16,8 @@ export type ActionState = {
 // ─── CREATE ────────────────────────────────────────────────────────────────
 
 export async function createService(prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const { userId: clerkId} =  await auth();
+    const user = await requireDeveloper();
 
-    if (!clerkId) {
-        return {
-            success: false,
-            message: "Vous devez être connecté pour créer un service.",
-        };
-    }
-
-   const user = await prisma.user.findUnique({
-        where: { clerkId },
-    });
-    
-    if (!user) {
-        return {
-            success: false,
-            message: "Utilisateur non trouvé.",
-        };
-    }
     const raw = {
         title: formData.get("title") ,
         slug: formData.get("slug"),
@@ -45,6 +28,7 @@ export async function createService(prevState: ActionState, formData: FormData):
         categoryId: formData.get("categoryId"),
         status: formData.get("status"),
     };
+
     const result = createServiceSchema.safeParse(raw);
     if (!result.success) {
         return {
@@ -67,13 +51,15 @@ export async function createService(prevState: ActionState, formData: FormData):
     };
    }
 
-   redirect("/services");
+   redirect("/developer/services");
 
 }
 
 // ─── UPDATE ────────────────────────────────────────────────────────────────
 
 export async function updateService(prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const user = await requireDeveloper();
+
     const id = formData.get("id") as string;
     const version = parseInt(formData.get("version") as string, 10);
 
@@ -97,8 +83,14 @@ export async function updateService(prevState: ActionState, formData: FormData):
    }
     try{
         const updateResult = await prisma.service.updateMany({
-            where: { id, version },
-            data: { ...result.data, version: {increment: 1} },
+            where: user.role === "ADMIN"
+                 ? { id, version }
+                    : { id, version, developerId: user.id },
+            data: {
+                ...result.data,
+                version: {increment: 1},
+            },
+            
         });
         if (updateResult.count === 0) {
             return {
@@ -117,30 +109,52 @@ export async function updateService(prevState: ActionState, formData: FormData):
         
 
     }
-    redirect("/services");
+    redirect("/developer/services");
 
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────
 
 export async function deleteService(
-  prevState: ActionState,
-  formData: FormData
+    prevState: ActionState,
+    formData: FormData
 ): Promise<ActionState> {
-  const id = formData.get("id") as string;
+    const user = await requireDeveloper();
 
-  const existing = await prisma.service.findUnique({ where: { id } });
+    const id = formData.get("id") as string;
 
-  if (!existing) {
-    return { success: false, message: "Service introuvable." };
-  }
+    const existing = await prisma.service.findUnique({
+        where: { id },
+        select: { 
+            id: true,
+            developerId: true,
+        },
+    });
 
-  try {
-    await prisma.service.delete({ where: { id } });
-    revalidatePath("/services");
-  } catch {
-    return { success: false, message: "Erreur lors de la suppression du service." };
-  }
+    if (!existing) {
+        return {
+            success: false,
+            message: "Service non trouvé.",
+        };
+    }
 
-  redirect("/services");
+
+    if (user.role !== "ADMIN" && existing.developerId !== user.id) {
+        return {
+            success: false,
+            message: "Vous n'avez pas la permission de supprimer ce service.",
+        };
+    }
+    try {
+        await prisma.service.delete({
+            where: { id }
+        });
+        revalidatePath("/services");
+    } catch {
+        return {
+            success: false,
+            message: "Une erreur est survenue lors de la suppression du service.",
+        };
+    }
+    redirect("/developer/services");
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServices } from "@/lib/queries/services";
 import { Pagination } from "@/components/Pagination";
+import { getAuthUser } from "@/app/lib/auth";
 
 // B.3 — Page Server Component : liste paginée des services
 // La page courante est lue depuis searchParams (URL partageable)
@@ -19,6 +20,10 @@ export default async function ServicesPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const authResult = await getAuthUser();
+  const canCreateService =
+    authResult.success &&
+    (authResult.user.role === "DEVELOPER" || authResult.user.role === "ADMIN");
 
   const page = parseInt(params.page ?? "1");
   const filters = {
@@ -45,12 +50,14 @@ export default async function ServicesPage({
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-3xl font-bold text-gray-900">Services CodeLink</h1>
-        <Link
-          href="/services/new"
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-        >
-          + Créer un service
-        </Link>
+        {canCreateService && (
+          <Link
+            href="/developer/services/new"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+          >
+            + Créer un service
+          </Link>
+        )}
       </div>
       <p className="text-gray-500 mb-8">
         {pagination.total} service{pagination.total !== 1 ? "s" : ""} disponible
