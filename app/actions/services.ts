@@ -35,6 +35,28 @@ export async function getPublishedServices() {
   });
 }
 
+// GET BY ID
+export async function getServiceById(id: string) {
+  return prisma.service.findUnique({
+    where: { id },
+    include: {
+      category: {
+        select: { id: true, name: true, slug: true, description: true },
+      },
+      developer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profile: {
+            select: { avatarUrl: true, bio: true, companyName: true },
+          },
+        },
+      },
+    },
+  });
+}
+
 
 // ─── CREATE ────────────────────────────────────────────────────────────────
 
@@ -166,4 +188,4 @@ export async function deleteService(
   }
 
   redirect("/services");
-}"
+}

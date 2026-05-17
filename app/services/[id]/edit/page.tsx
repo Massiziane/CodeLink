@@ -21,17 +21,46 @@ export default async function EditServicePage({ params }: Props) {
   if (!service) notFound();
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link href={`/services/${id}`} className="text-sm text-blue-600 hover:underline">
-          ← Retour au service
-        </Link>
-      </div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Modifier le service</h1>
-      <ServiceForm
-        service={service as unknown as ServiceModel}
-        categories={categories}
-      />
-    </main>
+    <div className="min-h-screen bg-gray-50">
+
+      {/* HERO (consistent with rest of app) */}
+      <section className="bg-gradient-to-br from-orange-500 to-orange-700 text-white py-12">
+        <div className="container mx-auto px-4 max-w-2xl">
+
+          <Link
+            href={`/services/${id}`}
+            className="text-sm text-orange-100 hover:text-white"
+          >
+            ← Back to service
+          </Link>
+
+          <h1 className="text-3xl font-bold mt-3">
+            Edit Service
+          </h1>
+
+          <p className="text-orange-100 mt-2 text-sm">
+            Update your service details and pricing
+          </p>
+
+        </div>
+      </section>
+
+      {/* FORM SECTION */}
+      <section className="py-10">
+        <div className="container mx-auto px-4 max-w-2xl">
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+            <ServiceForm
+              service={service as unknown as ServiceModel}
+              categories={categories}
+            />
+
+          </div>
+
+        </div>
+      </section>
+
+    </div>
   );
 }

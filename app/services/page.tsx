@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getServices } from "@/lib/queries/services";
 import { Pagination } from "@/components/Pagination";
+import { Header } from "@/app/components/UserHeader";
 
-// B.3 — Page Server Component : liste paginée des services
-// La page courante est lue depuis searchParams (URL partageable)
 type SearchParams = Promise<{
   page?: string;
   q?: string;
@@ -13,14 +12,11 @@ type SearchParams = Promise<{
   sort?: string;
 }>;
 
-export default async function ServicesPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function ServicesPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
 
   const page = parseInt(params.page ?? "1");
+
   const filters = {
     q: params.q,
     category: params.category,
@@ -32,7 +28,6 @@ export default async function ServicesPage({
 
   const { data: services, pagination } = await getServices(filters);
 
-  // Paramètres actuels pour la reconstruction des URLs de pagination
   const currentSearchParams: Record<string, string | undefined> = {
     q: params.q,
     category: params.category,
@@ -42,86 +37,164 @@ export default async function ServicesPage({
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-3xl font-bold text-gray-900">Services CodeLink</h1>
-        <Link
-          href="/services/new"
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-        >
-          + Créer un service
-        </Link>
-      </div>
-      <p className="text-gray-500 mb-8">
-        {pagination.total} service{pagination.total !== 1 ? "s" : ""} disponible
-        {pagination.total !== 1 ? "s" : ""}
-      </p>
+    <div className="min-h-screen bg-gray-50">
 
-      {/* État vide */}
-      {services.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-5xl mb-4">🔍</p>
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            Aucun service trouvé
-          </h2>
-          <p className="text-gray-500">
-            Essayez de modifier vos filtres ou revenez plus tard.
-          </p>
-        </div>
-      )}
+      {/* GLOBAL HEADER */}
+      <Header />
 
-      {/* Grille de services */}
-      {services.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => (
+      {/* HERO */}
+      <section className="bg-gradient-to-br from-orange-500 to-orange-700 text-white py-12">
+        <div className="container mx-auto px-4 max-w-6xl">
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
+            {/* LEFT TEXT */}
+            <div>
+              <h1 className="text-4xl font-bold">
+                Browse Services
+              </h1>
+
+              <p className="text-orange-100 mt-2">
+                Find developers and services for your project
+              </p>
+
+              <p className="text-orange-100 text-sm mt-3">
+                {pagination.total} service{pagination.total !== 1 ? "s" : ""} available
+              </p>
+            </div>
+
+            {/* CTA */}
             <Link
-              key={service.id}
-              href={`/services/${service.id}`}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow block"
+              href="/services/new"
+              className="bg-white text-orange-600 px-5 py-2 rounded-lg font-medium hover:bg-orange-50 w-fit"
             >
-              {service.isFeatured && (
-                <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded mb-2">
-                  En vedette
-                </span>
-              )}
-              <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">
-                {service.category.name}
-              </p>
-              <h2 className="font-semibold text-gray-900 text-base mb-1 line-clamp-2">
-                {service.title}
-              </h2>
-              <p className="text-sm text-gray-500 mb-3 line-clamp-3">
-                {service.description}
-              </p>
-              <div className="flex items-center justify-between mt-auto">
-                <span className="text-lg font-bold text-gray-900">
-                  {service.price.toFixed(2)} $
-                </span>
-                <span className="text-xs text-gray-400">
-                  {service.deliveryDays} jour{service.deliveryDays > 1 ? "s" : ""}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                Par {service.developer.name ?? service.developer.email}
-              </p>
+              + Create Service
             </Link>
-          ))}
+
+          </div>
+
+          {/* SEARCH BAR (NEW — IMPORTANT UX UPGRADE) */}
+          <form method="GET" className="mt-8 max-w-2xl">
+            <div className="flex bg-white rounded-xl overflow-hidden shadow-sm">
+
+              <input
+                name="q"
+                defaultValue={params.q}
+                placeholder="Search services, categories, developers..."
+                className="w-full px-4 py-3 text-gray-900 outline-none"
+              />
+
+              <button
+                type="submit"
+                className="bg-orange-600 text-white px-6 hover:bg-orange-700"
+              >
+                Search
+              </button>
+
+            </div>
+          </form>
+
         </div>
-      )}
+      </section>
 
-      {/* B.3 — Composant Pagination avec métadonnées */}
-      <Pagination
-        pagination={pagination}
-        basePath="/services"
-        currentSearchParams={currentSearchParams}
-      />
+      {/* CONTENT */}
+      <section className="py-10">
+        <div className="container mx-auto px-4 max-w-6xl">
 
-      {/* Informations de pagination */}
-      {pagination.totalPages > 1 && (
-        <p className="text-center text-sm text-gray-400 mt-4">
-          Page {pagination.page} sur {pagination.totalPages}
-        </p>
-      )}
-    </main>
+          {/* EMPTY STATE */}
+          {services.length === 0 && (
+            <div className="text-center py-24">
+              <p className="text-5xl">🔍</p>
+              <h2 className="text-xl font-semibold mt-4 text-gray-800">
+                No services found
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Try adjusting your filters or search terms.
+              </p>
+            </div>
+          )}
+
+          {/* GRID */}
+          {services.length > 0 && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              {services.map((service) => (
+                <Link
+                  key={service.id}
+                  href={`/services/${service.id}`}
+                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl transition block"
+                >
+
+                  {/* HEADER ROW */}
+                  <div className="flex items-center justify-between mb-3">
+
+                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">
+                      {service.category.name}
+                    </p>
+
+                    {service.isFeatured && (
+                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                        Featured
+                      </span>
+                    )}
+
+                  </div>
+
+                  {/* TITLE */}
+                  <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                    {service.title}
+                  </h2>
+
+                  {/* DESCRIPTION */}
+                  <p className="text-sm text-gray-500 mt-2 line-clamp-3">
+                    {service.description}
+                  </p>
+
+                  {/* FOOTER */}
+                  <div className="mt-5 flex items-end justify-between">
+
+                    <div>
+                      <p className="text-xl font-bold text-orange-600">
+                        ${service.price}
+                      </p>
+
+                      <p className="text-xs text-gray-400">
+                        {service.deliveryDays} day{service.deliveryDays > 1 ? "s" : ""}
+                      </p>
+                    </div>
+
+                    <div className="text-right text-xs text-gray-500">
+                      <p>By</p>
+                      <p className="font-medium text-gray-700">
+                        {service.developer.name ?? service.developer.email}
+                      </p>
+                    </div>
+
+                  </div>
+
+                </Link>
+              ))}
+
+            </div>
+          )}
+
+          {/* PAGINATION */}
+          <div className="mt-10">
+            <Pagination
+              pagination={pagination}
+              basePath="/services"
+              currentSearchParams={currentSearchParams}
+            />
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <p className="text-center text-sm text-gray-400 mt-4">
+              Page {pagination.page} of {pagination.totalPages}
+            </p>
+          )}
+
+        </div>
+      </section>
+    </div>
   );
 }
